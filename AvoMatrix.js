@@ -338,7 +338,7 @@ class Matrix {
   }
 
   randomize() {
-    this.data = this.data.map(row => row.map(col => Math.random()));
+    this.data = this.data.map(row => row.map(col => Math.random()*2-1));
   }
 
   /**
