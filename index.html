@@ -16,8 +16,19 @@
 </style>
 <body>
   <p id="Task"></p>
+  <p id="guess">Number : </p>
   <canvas id="can" width="400" height="400"></canvas>
+  <form id="jsonFile" name="jsonFile" enctype="multipart/form-data" method="post">
+
+    <input type="file" id="csvFileInput" onchange="handleFiles(this.files)"
+              accept=".csv">
+</form>
+<button onclick="start()">start</button>
 </body>
+<script>
+let c = document.querySelector("canvas");
+let ctx = c.getContext("2d");
+</script>
 <script src="AvoMatrix.js"></script>
 <script src="AvoNet.js"></script>
 <script src="Image.js"></script>

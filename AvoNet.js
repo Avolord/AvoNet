@@ -29,6 +29,10 @@ class AvoNet { //Add function that checks for negative values in config
       this.bias = this.initBias();
       this.rate = 0.1;
       this.gen = 0;
+      this.maxError = 0;
+      this.minError = Infinity;
+      this.ErrorSum = 0;
+      this.wholeError = 0;
 
     } else {
 
@@ -64,8 +68,8 @@ class AvoNet { //Add function that checks for negative values in config
   }
 
   initBias() {
-    let bias = new Array(this.config.layer - 1).fill(0).map((bias,index) => new Matrix(this.nodes[index+1],1));
-        bias.map(b => b.randomize());
+    let bias = new Array(this.config.layer - 1).fill(0).map((bias, index) => new Matrix(this.nodes[index + 1], 1));
+    bias.map(b => b.randomize());
     return bias
   }
 
@@ -82,7 +86,16 @@ class AvoNet { //Add function that checks for negative values in config
     let guess = Matrix.fromArray(this.guess(input));
     real = Matrix.fromArray(real);
     let error = Matrix.sub(real, guess);
-    return error.toArray_flat().map(x => x * x).reduce((x, y) => x + y);
+    error = error.toArray_flat();
+    error = error.map(x => x * x);
+    error = error.reduce((x, y) => x + y);
+    ///Experimental///
+    this.minError = (error < this.minError) ? error : this.minError;
+    this.maxError = (error > this.maxError) ? error : this.maxError;
+    this.ErrorSum += error;
+    this.wholeError = this.ErrorSum / this.gen;
+    //Experimental///
+    return error;
   }
 
   guess(input) {
@@ -125,7 +138,7 @@ class AvoNet { //Add function that checks for negative values in config
     let layers = [layer.copy()];
 
     //calculate values of the nodes [forward propagation]
-    this.weights.forEach((weight,index) => {
+    this.weights.forEach((weight, index) => {
 
       //add all the connections to each node together
       layer = Matrix.prod(weight, layer);
@@ -137,7 +150,7 @@ class AvoNet { //Add function that checks for negative values in config
 
     });
 
-    let final_output = layers[layers.length-1];
+    let final_output = layers[layers.length - 1];
 
     //compute the output_error
     let final_error = Matrix.sub(target, final_output);
@@ -152,7 +165,7 @@ class AvoNet { //Add function that checks for negative values in config
       }
       //the other errors / gradients have to be computed differently e.g [e_h = W_ho^T * e_o]
       else {
-      //calculates the error on each layer
+        //calculates the error on each layer
         err = Matrix.prod(this.weights[i + 1].transpose(), err);
       }
 
@@ -166,23 +179,23 @@ class AvoNet { //Add function that checks for negative values in config
 
       let gradient;
       // 1.) (1 - layer_a) or. ( -layer_a + 1 )
-          gradient = Matrix.add(Matrix.invert(layer_a), 1);
+      gradient = Matrix.add(Matrix.invert(layer_a), 1);
       // 2.)  layer_a * [(1 - layer_a)]
-          gradient = Matrix.mult(layer_a, gradient);
+      gradient = Matrix.mult(layer_a, gradient);
       // 3.)  error * [layer_a * (1 - layer_a)]
-          gradient = Matrix.mult(err, gradient);
+      gradient = Matrix.mult(err, gradient);
 
       //compute delta_W and moderate it in 2 steps
       let delta_W;
       // 1.) gradient * layer_b^T
-          delta_W = Matrix.prod(gradient, layer_b);
+      delta_W = Matrix.prod(gradient, layer_b);
       // 2.) learning_rate * delta_W
-          delta_W = Matrix.mult(delta_W,this.rate);
+      delta_W = Matrix.mult(delta_W, this.rate);
 
       this.weights[i].add(delta_W);
 
       //compute delta_B [change in bias] {is just the gradient}
-      let delta_B = Matrix.mult(gradient,this.rate);
+      let delta_B = Matrix.mult(gradient, this.rate);
 
       this.bias[i].add(delta_B);
 
