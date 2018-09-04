@@ -39,7 +39,7 @@ Creates a new NeuronalNetwork-object with a given node-configuration
 **Kind**: global class
 
 * [AvoNet](#AvoNet)
-    * [new AvoNet(layer_configuration, layer_configuration, input)](#new_AvoNet_new)
+    * [new AvoNet(layer_configuration, input)](#new_AvoNet_new)
     * [.initConfig(conf)](#AvoNet+initConfig)
     * [.initNodes()](#AvoNet+initNodes)
     * [.initWeights(input)](#AvoNet+initWeights)
@@ -53,7 +53,7 @@ Creates a new NeuronalNetwork-object with a given node-configuration
 
 <a name="new_AvoNet_new"></a>
 
-### new AvoNet(layer_configuration, layer_configuration, input)
+### new AvoNet(layer_configuration, input)
 
 | Param | Type | Description |
 | --- | --- | --- |
