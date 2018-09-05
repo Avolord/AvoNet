@@ -53,7 +53,7 @@ Creates a new NeuronalNetwork-object with a given node-configuration
     * [.initWeights(input)](#AvoNet+initWeights)
     * [.initBias(input)](#AvoNet+initBias)
     * [.download()](#AvoNet+download)
-    * [.clone()](#AvoNet+clone)
+    * [.clone()](#AvoNet+clone) ⇒ <code>AvoNet</code> 
     * [.error(input, real)](#AvoNet+error) ⇒ <code>Number</code>
     * [.guess(input)](#AvoNet+guess) ⇒ <code>Array</code>
     * [.think(output)](#AvoNet+think) ⇒ <code>Array</code>
