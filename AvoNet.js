@@ -4,6 +4,10 @@
  * @description A JavaScript Library for NeuronalNetworks
  */
 
+let EPOCHS_DROP = 10;
+let DROP = 0.5;
+let EXP_DECAY_K = 0.1;
+
  /**
   * Sets the Error-messages
   */
@@ -50,16 +54,7 @@ class AvoNet { //Add function that checks for negative values in config
   constructor(layer_configuration,input) {
     if (layer_configuration instanceof AvoNet) {
 
-      this.nodes = layer_configuration.nodes.slice();
-      this.weights = layer_configuration.weights.slice();
-      this.bias = layer_configuration.bias.slice();
-      this.config = JSON.parse(JSON.stringify(layer_configuration.config));
-      this.rate = layer_configuration.rate;
-      this.gen = layer_configuration.gen;
-      this.maxError = layer_configuration.maxError;
-      this.minError = layer_configuration.minError;
-      this.ErrorSum = layer_configuration.ErrorSum;
-      this.wholeError = layer_configuration.wholeError;
+      return layer_configuration.clone();
 
     } else if (Array.isArray(layer_configuration)) {
 
@@ -67,8 +62,12 @@ class AvoNet { //Add function that checks for negative values in config
       this.nodes = this.initNodes();
       this.weights = this.initWeights(input);
       this.bias = this.initBias(input);
-      this.rate = 0.2;
-      this.gen = 0;
+      this.lr_sceduler = this.initDecay("exp");
+      this.lr = 0.2;
+      this.momentum = 0.8;
+      this.epochs = 1;
+      this.epoch = 0;
+      this.iterations = 0;
       this.maxError = 0;
       this.minError = Infinity;
       this.ErrorSum = 0;
@@ -143,13 +142,42 @@ class AvoNet { //Add function that checks for negative values in config
     return bias
   }
 
+  initDecay(type = "time", param1, param2) {
+    switch(type.toLowerCase()) {
+      case "time":
+        return this.time_based_decay;
+      break;
+      case "step":
+        return this.step_decay;
+      break;
+      case "exp":
+        return this.exponetial_decay;
+      break;
+      default:
+        return this.stable_lr;
+    }
+  }
+
   /**
    * Allows the User to download the Network
    * @inner
    */
   download() {
-    let name = "AvoNet_" + this.config.layer + "_layer.json";
-    saveFile(name, JSON.stringify(this));
+    let filename = "AvoNet_" + this.config.layer + "_layer.json";
+    let data = JSON.stringify(this);
+    var blob = new Blob([data], {type: 'text/csv'});
+    
+    if(window.navigator.msSaveOrOpenBlob) {
+        window.navigator.msSaveBlob(blob, filename);
+    }
+    else{
+        var elem = window.document.createElement('a');
+        elem.href = window.URL.createObjectURL(blob);
+        elem.download = filename;
+        document.body.appendChild(elem);
+        elem.click();
+        document.body.removeChild(elem);
+    }
   }
 
   /**
@@ -157,7 +185,18 @@ class AvoNet { //Add function that checks for negative values in config
    * @inner
    */
   clone() {
-    return new AvoNet(this);
+    let result = new AvoNet([1]);
+    result.nodes = this.nodes.slice();
+    result.weights = this.weights.slice();
+    result.bias = this.bias.slice();
+    result.config = JSON.parse(JSON.stringify(this.config));
+    result.rate = this.lr;
+    result.epoch = this.iterations;
+    result.maxError = this.maxError;
+    result.minError = this.minError;
+    result.ErrorSum = this.ErrorSum;
+    result.wholeError = this.wholeError;
+    return result;
   }
 
   /**
@@ -178,7 +217,7 @@ class AvoNet { //Add function that checks for negative values in config
     this.minError = (error < this.minError) ? error : this.minError;
     this.maxError = (error > this.maxError) ? error : this.maxError;
     this.ErrorSum += error;
-    this.wholeError = this.ErrorSum / this.gen;
+    this.wholeError = this.ErrorSum / this.iterations;
     //Experimental///
     return error;
   }
@@ -239,7 +278,8 @@ class AvoNet { //Add function that checks for negative values in config
       throw IOError;
     }
 
-    this.gen++;
+    this.iterations++;
+    this.lr = this.lr_sceduler();
 
     //transform the targets into a matrix
     let target = Matrix.fromArray(real);
@@ -304,16 +344,33 @@ class AvoNet { //Add function that checks for negative values in config
       // 1.) gradient * layer_b^T
       delta_W = Matrix.prod(gradient, layer_b);
       // 2.) learning_rate * delta_W
-      delta_W = Matrix.mult(delta_W, this.rate);
+      delta_W = Matrix.mult(delta_W, this.lr);
 
       this.weights[i].add(delta_W);
 
       //compute delta_B [change in bias] {is just the gradient}
-      let delta_B = Matrix.mult(gradient, this.rate);
+      let delta_B = Matrix.mult(gradient, this.lr);
 
       this.bias[i].add(delta_B);
 
     }
+  }
+
+  stable_lr() {
+    return this.lr;
+  }
+
+  time_based_decay() {
+    //decay = this.lr / this.epochs
+    return this.lr / (1 + (this.lr / this.epochs) * this.iterations)
+  }
+
+  step_decay() {
+    return this.lr * Math.pow(DROP, Math.floor((1+this.epochs) / EPOCHS_DROP));
+  }
+
+  exponetial_decay() {
+    return Math.exp(-EXP_DECAY_K * this.iterations);
   }
 
 
