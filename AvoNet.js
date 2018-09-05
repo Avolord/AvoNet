@@ -62,8 +62,9 @@ class AvoNet { //Add function that checks for negative values in config
       this.nodes = this.initNodes();
       this.weights = this.initWeights(input);
       this.bias = this.initBias(input);
-      this.lr_sceduler = this.initDecay("exp");
-      this.lr = 0.2;
+      this.initDecay("exp");
+      this.init_lr = 0.2;
+      this.lr = this.init_lr;
       this.momentum = 0.8;
       this.epochs = 1;
       this.epoch = 0;
@@ -142,19 +143,19 @@ class AvoNet { //Add function that checks for negative values in config
     return bias
   }
 
-  initDecay(type = "time", param1, param2) {
+  initDecay(type = "") {
     switch(type.toLowerCase()) {
       case "time":
-        return this.time_based_decay;
+        this.lr_sceduler = this.time_based_decay;
       break;
       case "step":
-        return this.step_decay;
+        this.lr_sceduler = this.step_decay;
       break;
       case "exp":
-        return this.exponetial_decay;
+        this.lr_sceduler = this.exponetial_decay;
       break;
       default:
-        return this.stable_lr;
+        this.lr_sceduler = this.stable_lr;
     }
   }
 
@@ -166,7 +167,7 @@ class AvoNet { //Add function that checks for negative values in config
     let filename = "AvoNet_" + this.config.layer + "_layer.json";
     let data = JSON.stringify(this);
     var blob = new Blob([data], {type: 'text/csv'});
-    
+
     if(window.navigator.msSaveOrOpenBlob) {
         window.navigator.msSaveBlob(blob, filename);
     }
@@ -238,6 +239,23 @@ class AvoNet { //Add function that checks for negative values in config
       value.add(this.bias[index]);
       value.map(sigmoid);
     });
+    return value.toArray_flat();
+  }
+
+  guess_layer(input, index) {
+    if (!Array.isArray(input) || input.length != this.config.inputs) {
+      throw InputError;
+    }
+    if(!this.nodes[index]) {
+      console.error("No layer with that index found!");
+      return;
+    }
+    let value = Matrix.fromArray(input);
+    for(let i=0;i<index;i++) {
+      value = Matrix.prod(this.weights[i], value);
+      value.add(this.bias[i]);
+      value.map(sigmoid);
+    }
     return value.toArray_flat();
   }
 
@@ -362,15 +380,15 @@ class AvoNet { //Add function that checks for negative values in config
 
   time_based_decay() {
     //decay = this.lr / this.epochs
-    return this.lr / (1 + (this.lr / this.epochs) * this.iterations)
+    return this.init_lr / (1 + (this.init_lr / this.epochs) * this.iterations)
   }
 
   step_decay() {
-    return this.lr * Math.pow(DROP, Math.floor((1+this.epochs) / EPOCHS_DROP));
+    return this.init_lr * Math.pow(DROP, Math.floor((1+this.epoch) / EPOCHS_DROP));
   }
 
   exponetial_decay() {
-    return Math.exp(-EXP_DECAY_K * this.iterations);
+    return this.init_lr * Math.exp(-EXP_DECAY_K * this.epoch);
   }
 
 
