@@ -1,3 +1,11 @@
+## Documentation
+You can find the JSDoc Documentation [here](https://Avolord.github.io/AvoNet/AvoNet.html)<br>
+
+### `class AvoNet`
+
+ * **Author:** AvoLord
+ * **Version:** 0.1
+
 ## Classes
 
 <dl>
@@ -45,7 +53,7 @@ Creates a new NeuronalNetwork-object with a given node-configuration
     * [.initWeights(input)](#AvoNet+initWeights)
     * [.initBias(input)](#AvoNet+initBias)
     * [.download()](#AvoNet+download)
-    * [.clone()](#AvoNet+clone)
+    * [.clone()](#AvoNet+clone) ⇒ <code>AvoNet</code> 
     * [.error(input, real)](#AvoNet+error) ⇒ <code>Number</code>
     * [.guess(input)](#AvoNet+guess) ⇒ <code>Array</code>
     * [.think(output)](#AvoNet+think) ⇒ <code>Array</code>
@@ -63,7 +71,7 @@ Creates a new NeuronalNetwork-object with a given node-configuration
 
 <a name="AvoNet+initConfig"></a>
 
-### avoNet.initConfig(conf)
+### .initConfig(conf)
 Initializes the node-configuration
 
 **Kind**: instance method of [<code>AvoNet</code>](#AvoNet)
@@ -74,13 +82,13 @@ Initializes the node-configuration
 
 <a name="AvoNet+initNodes"></a>
 
-### avoNet.initNodes()
+### .initNodes()
 Initializes the node-configuration [as an Array]
 
 **Kind**: instance method of [<code>AvoNet</code>](#AvoNet)
 <a name="AvoNet+initWeights"></a>
 
-### avoNet.initWeights(input)
+### .initWeights(input)
 Initializes the weights
 
 **Kind**: instance method of [<code>AvoNet</code>](#AvoNet)
@@ -91,7 +99,7 @@ Initializes the weights
 
 <a name="AvoNet+initBias"></a>
 
-### avoNet.initBias(input)
+### .initBias(input)
 Initializes the bias
 
 **Kind**: instance method of [<code>AvoNet</code>](#AvoNet)
@@ -102,19 +110,19 @@ Initializes the bias
 
 <a name="AvoNet+download"></a>
 
-### avoNet.download()
+### .download()
 Allows the User to download the Network
 
 **Kind**: instance method of [<code>AvoNet</code>](#AvoNet)
 <a name="AvoNet+clone"></a>
 
-### avoNet.clone()
+### .clone()
 Allows the User to clone the Network
 
 **Kind**: instance method of [<code>AvoNet</code>](#AvoNet)
 <a name="AvoNet+error"></a>
 
-### avoNet.error(input, real) ⇒ <code>Number</code>
+### .error(input, real) ⇒ <code>Number</code>
 Determines the error given that Network produces
 
 **Kind**: instance method of [<code>AvoNet</code>](#AvoNet)
@@ -127,7 +135,7 @@ Determines the error given that Network produces
 
 <a name="AvoNet+guess"></a>
 
-### avoNet.guess(input) ⇒ <code>Array</code>
+### .guess(input) ⇒ <code>Array</code>
 Returns a guess corresponding to a given Input
 
 **Kind**: instance method of [<code>AvoNet</code>](#AvoNet)
@@ -139,7 +147,7 @@ Returns a guess corresponding to a given Input
 
 <a name="AvoNet+think"></a>
 
-### avoNet.think(output) ⇒ <code>Array</code>
+### .think(output) ⇒ <code>Array</code>
 -----------------------[W I P]-------------------------
 
 **Kind**: instance method of [<code>AvoNet</code>](#AvoNet)
@@ -151,7 +159,7 @@ Returns a guess corresponding to a given Input
 
 <a name="AvoNet+train"></a>
 
-### avoNet.train(input, input)
+### .train(input, input)
 Trains the Network corresponding to its error
 
 **Kind**: instance method of [<code>AvoNet</code>](#AvoNet)

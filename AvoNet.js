@@ -1,17 +1,53 @@
+/**
+ * @version 1.0.0
+ * @author AvoLord
+ * @description A JavaScript Library for NeuronalNetworks
+ */
+
+ /**
+  * Sets the Error-messages
+  */
 let ConstructionError = new Error("The input has to be a layer configuration [as an Array] or another AvoNet!");
 let InputError = new Error("The Input has to be an ARRAY with as much elements as the input nodes!");
 let IOError = new Error("The Input/Output has to be an ARRAY with as much elements as the input/output nodes!");
 
+/**
+ * The sigmoid function
+ * @param { Number } x - The input
+ * @return { Number } - The corresponding y-value
+ */
 let sigmoid = (x) => 1 / (1 + Math.pow(Math.E, -x));
 
+/**
+ * The derivative of the sigmoid function
+ * @param { Number } x - The input
+ * @return { Number } - The corresponding y-value
+ */
 let dsigmoid = (x) => sigmoid(x) * (1 - sigmoid(x));
 
+/**
+ * The invers-sigmoid function or logit function
+ * @param { Number } x - The input
+ * @return { Number } - The corresponding y-value
+ */
 let logit = (y) => Math.log(y / (1 - y));
 
+/**
+ * A simple function that either returns 0 or 1
+ * @param { Number } x - The input
+ * @return { Number } - The corresponding y-value
+ */
 let simple = (x) => (x > 0) ? 1 : 0;
 
+/**
+ * Creates a new NeuronalNetwork-object with a given node-configuration
+ * @constructor
+ * @param { Array } layer_configuration - A node-configuration that specifies the amount of input,hidden and output nodes
+ * @param { AvoNet } layer_configuration - Another NeuronalNetwork that will be copied
+ * @param { Number } input - A custom value for the weights [random if left empty]
+ */
 class AvoNet { //Add function that checks for negative values in config
-  constructor(layer_configuration) {
+  constructor(layer_configuration,input) {
     if (layer_configuration instanceof AvoNet) {
 
       this.nodes = layer_configuration.nodes.slice();
@@ -20,14 +56,18 @@ class AvoNet { //Add function that checks for negative values in config
       this.config = JSON.parse(JSON.stringify(layer_configuration.config));
       this.rate = layer_configuration.rate;
       this.gen = layer_configuration.gen;
+      this.maxError = layer_configuration.maxError;
+      this.minError = layer_configuration.minError;
+      this.ErrorSum = layer_configuration.ErrorSum;
+      this.wholeError = layer_configuration.wholeError;
 
     } else if (Array.isArray(layer_configuration)) {
 
       this.config = this.initConfig(layer_configuration);
       this.nodes = this.initNodes();
-      this.weights = this.initWeights();
-      this.bias = this.initBias();
-      this.rate = 0.1;
+      this.weights = this.initWeights(input);
+      this.bias = this.initBias(input);
+      this.rate = 0.2;
       this.gen = 0;
       this.maxError = 0;
       this.minError = Infinity;
@@ -41,6 +81,11 @@ class AvoNet { //Add function that checks for negative values in config
     }
   }
 
+  /**
+   * Initializes the node-configuration
+   * @inner
+   * @param { Array } conf - The layer_configuration from the constructor
+   */
   initConfig(conf) {
     let layer = conf.length;
     let conf_JSON = JSON.stringify(conf);
@@ -56,32 +101,72 @@ class AvoNet { //Add function that checks for negative values in config
     };
   }
 
+  /**
+   * Initializes the node-configuration [as an Array]
+   * @inner
+   */
   initNodes() {
     return JSON.parse(this.config.conf_JSON);
   }
 
-  initWeights() {
-    let weights = new Array(this.config.layer - 1).fill(0);
-    weights = weights.map((weight, i) => new Matrix(this.nodes[i + 1], this.nodes[i]));
-    weights.forEach(weight => weight.randomize())
+  /**
+   * Initializes the weights
+   * @inner
+   * @param { Number } input - A possible value for the weights [random if empty]
+   */
+  initWeights(input) {
+    let weights;
+    if(input) {
+      weights = new Array(this.config.layer - 1).fill(0);
+      weights = weights.map((weight, i) => new Matrix(this.nodes[i + 1], this.nodes[i], input));
+    } else {
+      weights = new Array(this.config.layer - 1).fill(0);
+      weights = weights.map((weight, i) => new Matrix(this.nodes[i + 1], this.nodes[i]));
+      weights.forEach(weight => weight.randomize());
+    }
     return weights;
   }
 
-  initBias() {
-    let bias = new Array(this.config.layer - 1).fill(0).map((bias, index) => new Matrix(this.nodes[index + 1], 1));
-    bias.map(b => b.randomize());
+  /**
+   * Initializes the bias
+   * @inner
+   * @param { Number } input - A possible value for the bias [random if empty]
+   */
+  initBias(input) {
+    let bias;
+    if(input)
+      bias = new Array(this.config.layer - 1).fill(0).map((bias, index) => new Matrix(this.nodes[index + 1], 1,input));
+    else {
+      bias = new Array(this.config.layer - 1).fill(0).map((bias, index) => new Matrix(this.nodes[index + 1], 1));
+      bias.map(b => b.randomize());
+    }
     return bias
   }
 
+  /**
+   * Allows the User to download the Network
+   * @inner
+   */
   download() {
     let name = "AvoNet_" + this.config.layer + "_layer.json";
     saveFile(name, JSON.stringify(this));
   }
 
+  /**
+   * Allows the User to clone the Network
+   * @inner
+   */
   clone() {
     return new AvoNet(this);
   }
 
+  /**
+   * Determines the error given that Network produces
+   * @inner
+   * @param { Array } input - An Input Array [Input Vector]
+   * @param { Array } real - The Real-values [Solution Vector]
+   * @return { Number } - The error-value
+   */
   error(input, real) {
     let guess = Matrix.fromArray(this.guess(input));
     real = Matrix.fromArray(real);
@@ -98,6 +183,12 @@ class AvoNet { //Add function that checks for negative values in config
     return error;
   }
 
+  /**
+   * Returns a guess corresponding to a given Input
+   * @inner
+   * @param { Array } input - An Input Array [Input Vector]
+   * @return { Array } - An Output Array [Output Vector]
+   */
   guess(input) {
     if (!Array.isArray(input) || input.length != this.config.inputs) {
       throw InputError;
@@ -111,17 +202,40 @@ class AvoNet { //Add function that checks for negative values in config
     return value.toArray_flat();
   }
 
+  /**
+   * Returns an Input-vector corresponding to a given Output
+   * -----------------------[W I P]-------------------------
+   * @inner
+   * @param { Array } output - An Output Array [Output Vector]
+   * @return { Array } - An Input Array [Input Vector]
+   */
   think(output) {
-    //backwards output -> input
+    if (!Array.isArray(output) || output.length != this.config.outputs) {
+      throw InputError;
+    }
+    let weights_T = this.weights.slice().reverse();
+    let revBias = this.bias.slice().reverse();
+    let value = Matrix.fromArray(output);
+        value.map(logit);
+    weights_T.forEach((weight, index) => {
+      value = Matrix.prod(weight.transpose(), value);
+    });
+    return value.toArray_flat();
   }
 
-
+  /**
+   * Trains the Network corresponding to its error
+   * @inner
+   * @param { Array } input - An Input Array [Input Vector]
+   * @param { Array } input - An Real Array [Solution Vector]
+   */
   train(input, real) {
 
     if (!Array.isArray(input) ||
       !Array.isArray(real) ||
       input.length != this.config.inputs ||
       real.length != this.config.outputs) {
+        console.log("I: "+input.length+" R: "+real.length);
       throw IOError;
     }
 
@@ -204,11 +318,3 @@ class AvoNet { //Add function that checks for negative values in config
 
 
 }
-
-
-
-
-
-
-
-//
