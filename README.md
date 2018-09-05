@@ -1,3 +1,11 @@
+## Documentation
+You can find the JSDoc Documentation [here](https://Avolord.github.io/AvoNet/AvoNet.html)<br>
+
+### `class AvoNet`
+
+ * **Author:** AvoLord
+ * **Version:** 0.1
+
 ## Classes
 
 <dl>
